@@ -1,3 +1,4 @@
+package beacon.kontakt.main;
 
 public class Venue {
 

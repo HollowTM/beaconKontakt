@@ -1,4 +1,4 @@
-package Trilateration;
+package beacon.kontakt.trilateration;
 
 import org.apache.commons.math3.fitting.leastsquares.MultivariateJacobianFunction;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;

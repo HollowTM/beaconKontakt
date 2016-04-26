@@ -1,15 +1,13 @@
+package beacon.kontakt.main;
 
 public class Beacon {
 
 	private String clientID;
-	
-	
+
 	public Beacon(String clientID) {
 		super();
 		this.clientID = clientID;
 	}
-
-	
 
 	public String getClientID() {
 		return clientID;

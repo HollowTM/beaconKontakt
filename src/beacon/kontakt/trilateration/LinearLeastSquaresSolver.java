@@ -1,4 +1,4 @@
-package Trilateration;
+package beacon.kontakt.trilateration;
 
 import org.apache.commons.math3.linear.*;
 

@@ -1,3 +1,5 @@
+package beacon.kontakt.main;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -11,8 +13,8 @@ import org.apache.commons.math3.fitting.leastsquares.LeastSquaresOptimizer.Optim
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import Trilateration.NonLinearLeastSquaresSolver;
-import Trilateration.TrilaterationFunction;
+import beacon.kontakt.trilateration.NonLinearLeastSquaresSolver;
+import beacon.kontakt.trilateration.TrilaterationFunction;
 
 public class Main {
 
@@ -51,37 +53,34 @@ public class Main {
 	// time Window for test purpose
 	static final long testTime = 1460733000;
 
+	// todo getter/setter or better
+	static public String message = null;
+
 	public static void main(String[] args) throws InterruptedException {
-
-
-
-		String restResponse0 = restCall(VenueajVv7, testTime);
-		jsonToArray(restResponse0, 0);
-		System.out.println("-------------------------------------------------------------------------------");
-		String restResponse1 = restCall(Venuec8Vwl, testTime);
-		jsonToArray(restResponse1, 1);
-		System.out.println("-------------------------------------------------------------------------------");
-		String restResponse2 = restCall(VenuenTQa3, testTime);
-		jsonToArray(restResponse2, 2);
-
-		
-		// consoleOutputArray();
-		outputHomepage(4);
-		System.out.println("Programm ended");
+		String VenueaList[] = {VenueajVv7, Venuec8Vwl, VenuenTQa3};
+		for(int i = 0; i < VenueaList.length; i++){
+			String restResponse = restCall(VenueaList[i], testTime);
+			if(restResponse.equals("error")){
+				message = "error";
+				return;
+			}
+			jsonToArray(restResponse, i);
+		}
+		 outputHomepage(4);
+		 System.out.println(message);
 	}
 
 	/**
 	 * Generates the JSON Object for the h view
 	 */
 	private static void outputHomepage(int time) {
-		String message = null;
+
 		JSONObject json = new JSONObject();
-
 		JSONArray beacons = new JSONArray();
-		JSONObject item = new JSONObject();
-
 		// Iterate Beacons
 		for (int i = 0; i < 3; i++) {
+			JSONObject item = new JSONObject();
+
 			// give back int[] with position in venue p[0] = position in venue 0
 			int p[] = searchSmartBeacon(time, beaconList[i].getClientID());
 			item.put("clientID", beaconList[i].getClientID());
@@ -100,7 +99,7 @@ public class Main {
 			// Search Beacons in venueList
 			JSONArray distanceFromStations = new JSONArray();
 			for (int j = 0; j < 3; j++) {
-				
+
 				JSONObject distanceStation = new JSONObject();
 
 				distanceStation.put("sourceId", venueList[j][time][p[i]].getSourceID());
@@ -114,6 +113,7 @@ public class Main {
 			beacons.put(item);
 
 		}
+		json.put("beacons", beacons);
 
 		// create the Station (CloudBeacon) Objects for JSON
 		JSONArray stations = new JSONArray();
@@ -123,29 +123,24 @@ public class Main {
 			item2.put("xPos", cloudBeaconList[n].getxPos());
 			item2.put("yPos", cloudBeaconList[n].getyPos());
 			stations.put(item2);
-
 		}
 
 		json.put("stations", stations);
-		json.put("beacons", beacons);
-
 		message = json.toString();
-
-		System.out.println(message);
-
 	}
 
 	/**
 	 * search SmartBeacon position in VenueList with given time
+	 * 
 	 * @param time
 	 * @param beacon
 	 * @return
 	 */
 	private static int[] searchSmartBeacon(int time, String beacon) {
 		int[] p = new int[3];
-		//iterate venues
+		// iterate venues
 		for (int i = 0; i < 3; i++) {
-			//iterate beacons
+			// iterate beacons
 			for (int j = 0; j < 3; j++) {
 				if (venueList[i][time][j].getClientID().equals(beacon)) {
 					p[i] = j;
@@ -178,8 +173,8 @@ public class Main {
 
 		// the answer
 		double[] centroid = optimum.getPoint().toArray();
-		System.out.println(centroid[0]);
-		System.out.println(centroid[1]);
+		// System.out.println(centroid[0]);
+		// System.out.println(centroid[1]);
 
 		return centroid;
 	}
@@ -220,16 +215,20 @@ public class Main {
 			conn.setRequestProperty("Api-Key", "PYTnfXWZhlweZFBqSZTSPLwBbWOpxewY");
 
 			if (conn.getResponseCode() != 200) {
-				throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+				// throw new RuntimeException("Failed : HTTP error code : " +
+				// conn.getResponseCode());
+				System.out.println("error");
+				conn.disconnect();
+				return "error";
 			}
 
 			BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
 
 			String output;
-			System.out.println("Output from Rest | Venue " + venue);
+			// System.out.println("Output from Rest | Venue " + venue);
 			while ((output = br.readLine()) != null) {
 
-				System.out.println(output);
+				// System.out.println(output);
 				return output;
 			}
 
@@ -256,15 +255,17 @@ public class Main {
 	 *            venue to which it will save
 	 */
 	private static void jsonToArray(String json, int venueSave) {
+		JSONObject jsnobject = null;
 
-		JSONObject jsnobject = new JSONObject(json);
+		jsnobject = new JSONObject(json);
+
 		JSONArray ranges = jsnobject.getJSONArray("ranges");
 
 		// Range array
 		for (int i = 0; i < ranges.length(); i++) {
 
 			JSONObject explrObject = ranges.getJSONObject(i);
-			System.out.println("\n" + explrObject);
+			// System.out.println("\n" + explrObject);
 			JSONArray clients = explrObject.getJSONArray("clients");
 
 			// iterate clients
@@ -278,7 +279,7 @@ public class Main {
 					// Save only Test Beacons
 					if (uniqueId.equals("W2xX") || uniqueId.equals("rV0B") || uniqueId.equals("wO6P")) {
 
-						System.out.println("\n---------\n" + uniqueId);
+						// System.out.println("\n---------\n" + uniqueId);
 						// sourceID and value
 						JSONArray sourceID = clients.getJSONObject(j).getJSONArray("rssis");
 
@@ -293,11 +294,13 @@ public class Main {
 						venueList[venueSave][i][b].setRssi(sourceID.getJSONObject(0).getDouble("value"));
 						// Distance
 						venueList[venueSave][i][b]
-								.setDistance(calculateAccuracy(txPower, venueList[0][i][b].getRssi()));
-						System.out.println("RSSI " + venueList[venueSave][i][b].getRssi() + "| Distance "
-								+ venueList[venueSave][i][b].getDistance());
+								.setDistance(calculateAccuracy(txPower, venueList[venueSave][i][b].getRssi()));
+						// System.out.println("RSSI " +
+						// venueList[venueSave][i][b].getRssi() + "| Distance "
+						// + venueList[venueSave][i][b].getDistance());
 						// Timestamp
-						System.out.println("Unix Timestamp " + explrObject.getInt("timestamp"));
+						// System.out.println("Unix Timestamp " +
+						// explrObject.getInt("timestamp"));
 						venueList[venueSave][i][b].setTimestamp(explrObject.getInt("timestamp"));
 
 						// iterate b for SmartBeacon position
@@ -318,7 +321,7 @@ public class Main {
 	private static long currentTime(int timeMinusSeconds) {
 		Instant unixTime = Instant.now();
 		unixTime = unixTime.minusSeconds(timeMinusSeconds);
-		System.out.println(unixTime);
+		// System.out.println(unixTime);
 		return unixTime.getEpochSecond();
 	}
 
@@ -348,7 +351,7 @@ public class Main {
 	private static void consoleOutputArray() {
 		for (int i = 0; i < 3; i++) {
 			boolean stop = false;
-			System.out.println("Venue: " + i);
+			// System.out.println("Venue: " + i);
 
 			for (int j = 0; stop != true; j++) {
 
@@ -357,9 +360,10 @@ public class Main {
 					boolean stop2 = false;
 					for (int m = 0; stop2 != true; m++) {
 						if (venueList[i][j][m] != null) {
-							System.out.println("Source ID: " + venueList[i][j][m].getSourceID() + "| Client ID: "
-									+ venueList[i][j][m].getClientID() + "| RSSI: " + venueList[i][j][m].getRssi()
-									+ "| Distance: " + venueList[i][j][m].getDistance() + "| Timestampt: "
+							System.out.println("Source ID: " + venueList[i][j][m].getSourceID()
+									+ "| Client ID: " + venueList[i][j][m].getClientID()
+									+ "| RSSI: " + venueList[i][j][m].getRssi() + "| Distance: "
+									+ venueList[i][j][m].getDistance() + "| Timestampt: "
 									+ venueList[i][j][m].getTimestamp());
 						} else {
 							stop2 = true;
